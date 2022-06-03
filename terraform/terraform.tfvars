@@ -11,3 +11,12 @@ enable_classiclink = "false"
 enable_classiclink_dns_support = "false"
 
 preferred_number_of_public_subnets = 2
+
+preferred_number_of_private_subnets = 4
+
+tags = {
+  Enviroment      = "production"
+  Owner-Email     = "itoya@moses.com"
+  Managed-By      = "Terraform"
+  Billing-Account = "0040789356"
+}

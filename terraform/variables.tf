@@ -1,5 +1,5 @@
 variable "region" {
-  default = "eu-central-1"
+  default = "us-east-1"
 }
 
 variable "vpc_cidr" {
@@ -24,4 +24,19 @@ variable "enable_classiclink_dns_support" {
 
 variable "preferred_number_of_public_subnets" {
   default = null
+}
+
+variable "preferred_number_of_private_subnets" {
+  default = null
+}
+
+variable "tags" {
+  description = "A mapping of tags to assign to all resources."
+  type        = map(string)
+  default     = {}
+}
+
+variable "name" {
+  type    = string
+  default = "royalt"
 }
