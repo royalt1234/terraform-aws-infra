@@ -5,7 +5,7 @@ resource "aws_route_table" "private-rtb" {
   tags = merge(
     var.tags,
     {
-      Name = format("%s-Private-Route-Table", var.name)
+      Name = format("%s-Private-Route-Table-%s", var.name, var.environment)
     },
   )
 }
