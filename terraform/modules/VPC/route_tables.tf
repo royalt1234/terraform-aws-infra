@@ -24,7 +24,7 @@ resource "aws_route_table" "public-rtb" {
   tags = merge(
     var.tags,
     {
-      Name = format("%s-Public-Route-Table", var.name)
+      Name = format("%s-Public-Route-Table-%s", var.name, var.environment)
     },
   )
 }

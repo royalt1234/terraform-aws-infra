@@ -1,6 +1,14 @@
+
+# Get list of availability zones
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+
+
 #### creating sns topic for all the auto scaling groups
 resource "aws_sns_topic" "doeita-sns" {
-  name = "Default_CloudWatch_Alarms_Topic"
+name = "Default_CloudWatch_Alarms_Topic"
 }
 
 resource "aws_autoscaling_notification" "doeita_notifications" {
@@ -20,17 +28,18 @@ resource "aws_autoscaling_notification" "doeita_notifications" {
   topic_arn = aws_sns_topic.doeita-sns.arn
 }
 
+
 resource "random_shuffle" "az_list" {
-  input = data.aws_availability_zones.available.names
+  input        = data.aws_availability_zones.available.names
 }
 
 resource "aws_launch_template" "bastion-launch-template" {
-  image_id               = var.ami
+  image_id               = var.ami-bastion
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.bastion_sg.id]
+  vpc_security_group_ids = var.bastion-sg
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ip.id
+    name = var.instance_profile
   }
 
   key_name = var.keypair
@@ -46,12 +55,12 @@ resource "aws_launch_template" "bastion-launch-template" {
   tag_specifications {
     resource_type = "instance"
 
-    tags = merge(
-      var.tags,
-      {
-        Name = "bastion-launch-template"
-      },
-    )
+   tags = merge(
+    var.tags,
+    {
+      Name = "bastion-launch-template"
+    },
+  )
   }
 
   user_data = filebase64("${path.module}/bastion.sh")
@@ -61,16 +70,13 @@ resource "aws_launch_template" "bastion-launch-template" {
 
 resource "aws_autoscaling_group" "bastion-asg" {
   name                      = "bastion-asg"
-  max_size                  = 2
-  min_size                  = 1
+  max_size                  = var.max_size
+  min_size                  = var.min_size
   health_check_grace_period = 300
   health_check_type         = "ELB"
-  desired_capacity          = 1
+  desired_capacity          = var.desired_capacity
 
-  vpc_zone_identifier = [
-    aws_subnet.public[0].id,
-    aws_subnet.public[1].id
-  ]
+  vpc_zone_identifier = var.public_subnets
 
   launch_template {
     id      = aws_launch_template.bastion-launch-template.id
@@ -87,15 +93,15 @@ resource "aws_autoscaling_group" "bastion-asg" {
 # launch template for nginx
 
 resource "aws_launch_template" "nginx-launch-template" {
-  image_id               = var.ami
+  image_id               = var.ami-nginx
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.nginx-sg.id]
+  vpc_security_group_ids = var.nginx-sg
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ip.id
+    name = var.instance_profile
   }
 
-  key_name = var.keypair
+  key_name =  var.keypair
 
   placement {
     availability_zone = "random_shuffle.az_list.result"
@@ -109,11 +115,11 @@ resource "aws_launch_template" "nginx-launch-template" {
     resource_type = "instance"
 
     tags = merge(
-      var.tags,
-      {
-        Name = "nginx-launch-template"
-      },
-    )
+    var.tags,
+    {
+      Name = "nginx-launch-template"
+    },
+  )
   }
 
   user_data = filebase64("${path.module}/nginx.sh")
@@ -123,16 +129,13 @@ resource "aws_launch_template" "nginx-launch-template" {
 
 resource "aws_autoscaling_group" "nginx-asg" {
   name                      = "nginx-asg"
-  max_size                  = 2
-  min_size                  = 1
+  max_size                  = var.max_size
+  min_size                  = var.min_size
   health_check_grace_period = 300
   health_check_type         = "ELB"
-  desired_capacity          = 1
+  desired_capacity          = var.desired_capacity
 
-  vpc_zone_identifier = [
-    aws_subnet.public[0].id,
-    aws_subnet.public[1].id
-  ]
+  vpc_zone_identifier = var.public_subnets
 
   launch_template {
     id      = aws_launch_template.nginx-launch-template.id
@@ -150,5 +153,5 @@ resource "aws_autoscaling_group" "nginx-asg" {
 # attaching autoscaling group of nginx to external load balancer
 resource "aws_autoscaling_attachment" "asg_attachment_nginx" {
   autoscaling_group_name = aws_autoscaling_group.nginx-asg.id
-  alb_target_group_arn   = aws_lb_target_group.nginx-tgt.arn
+  lb_target_group_arn   = var.nginx-alb-tgt
 }
