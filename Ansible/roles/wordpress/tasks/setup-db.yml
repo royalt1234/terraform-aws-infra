@@ -6,8 +6,8 @@
 - name: create database
   community.mysql.mysql_db:
     login_host: "terraform-2022061209234475800000000c.cvyrpdhgqalj.us-east-1.rds.amazonaws.com"
-    login_user: "david"
-    login_password: "devopspbl"
+    login_user: "admin12345"
+    login_password: "admin12345"
     name: wordpressdb
     collation: utf8_general_ci
     encoding: utf8
