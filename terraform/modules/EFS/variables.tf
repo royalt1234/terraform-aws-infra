@@ -15,7 +15,6 @@ variable "efs-sg" {
 variable "account_no" {
   type        = string
   description = "account number for the aws"
-  default = "046660960196"
 } 
 
 
